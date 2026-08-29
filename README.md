@@ -269,7 +269,64 @@ APIキーは`UserDefaults`ではなくiOS Keychainへ保存します。エンド
 
 実際のLLMエンドポイントへの接続と動作確認は、接続先が決まった後に行います。
 
-## 設計
+## セッションと会話履歴
+
+会話履歴を端末内へ保存するため、SwiftDataを導入しました。
+
+追加したファイル:
+
+```text
+Sources/MinimalApp/ChatModels.swift
+Sources/MinimalApp/SessionListView.swift
+```
+
+実装内容:
+
+- `ChatSession`でセッションを管理
+- `ChatMessage`でメッセージを管理
+- アプリ起動時に最初のセッションを作成
+- 右上の一覧ボタンからセッション一覧を表示
+- `+`ボタンで新しいセッションを作成
+- セッションを切り替え可能
+- メッセージを端末内へ保存
+- アプリ再起動後も会話データを復元
+
+セッション履歴にはiOS標準のSwiftDataを使用しています。ChatGPTエクスポートの検索用データベースは、別の段階でSQLite FTS5を使って実装します。
+
+今回のビルド結果:
+
+```text
+** BUILD SUCCEEDED **
+```
+
+## SOUL / USER / MEMORY入力
+
+プロフィールデータを入力・保存する画面を追加しました。
+
+```text
+Sources/MinimalApp/ProfileData.swift
+Sources/MinimalApp/ProfileView.swift
+```
+
+実装内容:
+
+- SOUL / USER / MEMORYを切り替えて編集
+- ChatGPTへ渡す生成プロンプトをコピー
+- ChatGPTの生成結果を貼り付け
+- 保存前に内容を確認・編集
+- アプリのApplication Support内へMarkdownとして保存
+- 右上のプロフィールボタンから開く
+
+プロフィールデータは次のファイルとして端末内に保存されます。
+
+```text
+Application Support/FamilyAI/Profile/SOUL.md
+Application Support/FamilyAI/Profile/USER.md
+Application Support/FamilyAI/Profile/MEMORY.md
+```
+
+アプリからChatGPT APIは呼び出しません。ユーザーがプロンプトをChatGPTへ貼り付け、生成結果をアプリへ戻して貼り付ける方式です。
+
 
 アプリ全体の設計方針は次のファイルにまとめています。
 

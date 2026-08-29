@@ -218,3 +218,66 @@ Swiftファイルだけを変更した場合は、`xcodegen generate`を再実�
 - `Button`を追加する
 - `@State`で画面の状態を管理する
 - ボタンを押すと表示が変わるアプリにする
+
+## 固定応答チャットボット
+
+### 概要
+
+`ContentView`を、簡単なチャットボット画面に変更しました。
+
+現在の仕様:
+
+- チャットメッセージを縦に表示する
+- ユーザーのメッセージを右側に表示する
+- ボットのメッセージを左側に表示する
+- 入力欄にメッセージを入力できる
+- 送信ボタンでユーザーメッセージを追加する
+- 送信すると固定文字列`これは固定メッセージです。`を返す
+- LLMエンドポイントやAPIキーは使用しない
+
+### 使用しているSwiftUI要素
+
+- `NavigationStack`: 画面のナビゲーション領域を作る
+- `ScrollView`: メッセージ一覧をスクロール可能にする
+- `LazyVStack`: メッセージを縦方向に並べる
+- `TextField`: ユーザー入力を受け取る
+- `Button`: メッセージ送信を実行する
+- `@State`: メッセージ一覧と入力内容を保持する
+- `ForEach`: メッセージ一覧からViewを繰り返し生成する
+
+### ビルド結果
+
+固定応答チャットボットへの変更後、次のコマンドでビルドに成功しました。
+
+```bash
+xcodebuild \
+  -project MinimalApp.xcodeproj \
+  -scheme MinimalApp \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,id=574CE48F-341F-410F-A6B9-CF9E23175A17' \
+  -derivedDataPath build \
+  build
+```
+
+ビルド結果:
+
+```text
+** BUILD SUCCEEDED **
+```
+
+生成されたアプリは次の場所にあります。
+
+```text
+build/Build/Products/Debug-iphonesimulator/MinimalApp.app
+```
+
+Simulatorへのインストールと起動は、次のコマンドで行えます。
+
+```bash
+xcrun simctl install booted \
+  build/Build/Products/Debug-iphonesimulator/MinimalApp.app
+```
+
+```bash
+xcrun simctl launch booted com.example.minimalapp
+```

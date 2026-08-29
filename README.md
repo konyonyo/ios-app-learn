@@ -1,10 +1,10 @@
 # iOS App Learning
 
-最小のアプリを自分で作成・実行しながら、iOSアプリ開発の基本を学ぶためのリポジトリです。
+iOSアプリを作った経験がないため、最小のアプリを自分で作成・実行しながら、iOSアプリ開発の基本を学ぶためのリポジトリです。
 
 ## 目的
 
-- macOS上でのiOS開発環境を構築する
+- macOS上でiOS開発環境を構築する
 - 最小のSwiftUIアプリを作成する
 - iOS Simulatorでアプリを実行する
 - 画面、状態、ユーザー操作の基本を理解する
@@ -12,14 +12,12 @@
 
 ## 開発環境
 
-現時点で確認できている環境:
-
-- 開発対象: iOS
 - CPUアーキテクチャ: arm64
 - Swift: 6.3.3
 - Xcode: 26.6
 - iOS Simulator runtime: iOS 26.5 (23F77)
 - 使用するシミュレータ: iPhone 17 Pro
+- プロジェクト生成: XcodeGen 2.46.0
 
 ## 環境構築
 
@@ -37,11 +35,9 @@ xcode-select -p
 
 Command Line Toolsだけでは、`xcodebuild`、iOS SDK、iOS Simulatorは利用できません。
 
-### 2. Xcodeのインストール
+### 2. Xcodeのインストールと選択
 
-Xcode本体をインストールしました。
-
-Xcodeのインストール後、Xcodeを使用する開発者ディレクトリに切り替えました。
+Xcode本体をインストールした後、Xcodeを使用する開発者ディレクトリに切り替えました。
 
 ```bash
 sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
@@ -96,10 +92,129 @@ Simulatorの画面は次のコマンドで表示できます。
 open -a Simulator
 ```
 
+## 最小のSwiftUIアプリ
+
+### XcodeGenのインストール
+
+Homebrewを使ってXcodeGenをインストールしました。
+
+```bash
+brew install xcodegen
+```
+
+バージョンは次のコマンドで確認できます。
+
+```bash
+xcodegen --version
+```
+
+```text
+Version: 2.46.0
+```
+
+### プロジェクト構成
+
+```text
+.
+├── README.md
+├── project.yml
+└── Sources
+    └── MinimalApp
+        ├── MinimalApp.swift
+        └── ContentView.swift
+```
+
+`project.yml`からXcodeプロジェクトを生成しました。
+
+```bash
+xcodegen generate
+```
+
+生成される`MinimalApp.xcodeproj`は、`project.yml`を元に作られる生成物です。
+
+### アプリのビルド
+
+起動済みのiPhone 17 Pro Simulator向けにビルドしました。
+
+```bash
+xcodebuild \
+  -project MinimalApp.xcodeproj \
+  -scheme MinimalApp \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,id=574CE48F-341F-410F-A6B9-CF9E23175A17' \
+  -derivedDataPath build \
+  build
+```
+
+ビルドが成功すると、次の場所にアプリが生成されます。
+
+```text
+build/Build/Products/Debug-iphonesimulator/MinimalApp.app
+```
+
+### Simulatorへのインストール
+
+```bash
+xcrun simctl install booted \
+  build/Build/Products/Debug-iphonesimulator/MinimalApp.app
+```
+
+ここでのインストール対象は、iOS Simulator runtimeではなく、自分で作った`MinimalApp.app`です。
+
+### アプリの起動
+
+```bash
+xcrun simctl launch booted com.example.minimalapp
+```
+
+Simulator上に次の文字が表示されることを確認しました。
+
+```text
+Hello, swift UI!
+```
+
+## SwiftUIコードの構成
+
+### `MinimalApp.swift`
+
+```swift
+import SwiftUI
+
+@main
+struct MinimalApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+        }
+    }
+}
+```
+
+`@main`が付いた`MinimalApp`が、アプリの起動地点です。`WindowGroup`の中で、アプリ起動時に表示するViewとして`ContentView`を指定しています。
+
+### `ContentView.swift`
+
+```swift
+import SwiftUI
+
+struct ContentView: View {
+    var body: some View {
+        Text("Hello, swift UI!")
+    }
+}
+```
+
+`ContentView`は画面を表すViewです。`body`の中に書いた`Text`が、Simulatorの画面に表示されます。
+
+## 実際に試した変更
+
+最初の`Hello, iOS!`を自分で`Hello, swift UI!`に変更し、再ビルド・再インストール・再起動して、Simulatorの表示が変わることを確認しました。
+
+Swiftファイルだけを変更した場合は、`xcodegen generate`を再実行する必要はありません。`project.yml`を変更した場合だけ、Xcodeプロジェクトを再生成します。
+
 ## 次に行うこと
 
-- 最小のSwiftUIプロジェクトを作成する
-- `Hello, iOS!`を表示する
-- Xcodeプロジェクトをビルドする
-- iOS Simulatorでアプリを起動する
-- ボタンと状態管理を追加する
+- `VStack`で複数のViewを縦に並べる
+- `Button`を追加する
+- `@State`で画面の状態を管理する
+- ボタンを押すと表示が変わるアプリにする

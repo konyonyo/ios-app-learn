@@ -219,6 +219,16 @@ Swiftファイルだけを変更した場合は、`xcodegen generate`を再実�
 - `@State`で画面の状態を管理する
 - ボタンを押すと表示が変わるアプリにする
 
+## 設計
+
+アプリ全体の設計方針は次のファイルにまとめています。
+
+```text
+DESIGN.md
+```
+
+このアプリは、Hermes AgentやPi Agent全体を組み込まず、iOSアプリからLLMエンドポイントへ直接HTTPS通信する方針です。SOUL / USER / MEMORY、ChatGPTエクスポート、端末内の会話履歴を利用します。
+
 ## 固定応答チャットボット
 
 ### 概要

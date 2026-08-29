@@ -212,12 +212,62 @@ struct ContentView: View {
 
 Swiftファイルだけを変更した場合は、`xcodegen generate`を再実行する必要はありません。`project.yml`を変更した場合だけ、Xcodeプロジェクトを再生成します。
 
-## 次に行うこと
+## LLMクライアントの基盤
 
-- `VStack`で複数のViewを縦に並べる
-- `Button`を追加する
-- `@State`で画面の状態を管理する
-- ボタンを押すと表示が変わるアプリにする
+固定応答から実際のLLM接続へ移行できるよう、`LLMClient`プロトコルを追加しました。
+
+```text
+Sources/MinimalApp/LLMClient.swift
+```
+
+実装したクライアント:
+
+- `FixedResponseClient`: 現在アプリが使用している固定応答クライアント
+- `OpenAICompatibleClient`: OpenAI互換形式のHTTP APIを呼び出すクライアント
+
+現在はエンドポイント未設定のため、アプリは`FixedResponseClient`を使用します。APIキーをソースコードへ埋め込む処理は実装していません。
+
+### 新しいSwiftファイルを追加した場合
+
+XcodeGenで管理しているため、新しいSwiftファイルを追加したときは、Xcodeプロジェクトを再生成します。
+
+```bash
+xcodegen generate
+```
+
+その後、通常どおりビルドします。
+
+```bash
+xcodebuild \
+  -project MinimalApp.xcodeproj \
+  -scheme MinimalApp \
+  -sdk iphonesimulator \
+  -destination 'platform=iOS Simulator,id=574CE48F-341F-410F-A6B9-CF9E23175A17' \
+  -derivedDataPath build \
+  build
+```
+
+今回、この手順で`LLMClient.swift`を含むアプリのビルドに成功しました。
+
+## エンドポイント設定の基盤
+
+次のファイルを追加し、アプリの設定画面からOpenAI互換APIの情報を入力できるようにしました。
+
+```text
+Sources/MinimalApp/LLMConfiguration.swift
+Sources/MinimalApp/SettingsView.swift
+```
+
+設定できる項目:
+
+- Endpoint URL
+- Model
+- Organization ID（任意）
+- API Key
+
+APIキーは`UserDefaults`ではなくiOS Keychainへ保存します。エンドポイントが未設定の場合、アプリは従来どおり固定応答を使用します。
+
+実際のLLMエンドポイントへの接続と動作確認は、接続先が決まった後に行います。
 
 ## 設計
 

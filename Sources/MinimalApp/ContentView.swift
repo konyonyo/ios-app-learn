@@ -4,6 +4,13 @@ struct ChatMessage: Identifiable {
     let id = UUID()
     let text: String
     let isUser: Bool
+
+    var llmMessage: LLMMessage {
+        LLMMessage(
+            role: isUser ? .user : .assistant,
+            content: text
+        )
+    }
 }
 
 struct ContentView: View {
@@ -11,6 +18,24 @@ struct ContentView: View {
         ChatMessage(text: "こんにちは。メッセージを入力してください。", isUser: false)
     ]
     @State private var inputText = ""
+    @State private var isSending = false
+    @State private var errorMessage: String?
+    @State private var configuration = LLMConfiguration.load()
+    @State private var isShowingSettings = false
+
+    private var llmClient: any LLMClient {
+        guard configuration.isConfigured,
+              let endpoint = URL(string: configuration.endpoint) else {
+            return FixedResponseClient(response: "これは固定メッセージです。")
+        }
+
+        return OpenAICompatibleClient(
+            endpoint: endpoint,
+            model: configuration.model,
+            apiKey: configuration.apiKey,
+            organizationID: configuration.organizationID
+        )
+    }
 
     var body: some View {
         NavigationStack {
@@ -24,22 +49,50 @@ struct ContentView: View {
                     .padding()
                 }
 
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(.footnote)
+                        .foregroundStyle(.red)
+                        .padding(.horizontal)
+                }
+
                 Divider()
 
                 HStack(alignment: .bottom, spacing: 8) {
                     TextField("メッセージを入力", text: $inputText, axis: .vertical)
                         .textFieldStyle(.roundedBorder)
                         .lineLimit(1...4)
+                        .disabled(isSending)
 
                     Button(action: sendMessage) {
-                        Image(systemName: "arrow.up.circle.fill")
-                            .font(.title2)
+                        if isSending {
+                            ProgressView()
+                        } else {
+                            Image(systemName: "arrow.up.circle.fill")
+                                .font(.title2)
+                        }
                     }
-                    .disabled(inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    .disabled(
+                        isSending ||
+                        inputText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                    )
                 }
                 .padding()
             }
             .navigationTitle("Simple Chat")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isShowingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .accessibilityLabel("Settings")
+                }
+            }
+            .sheet(isPresented: $isShowingSettings) {
+                SettingsView(configuration: $configuration)
+            }
         }
     }
 
@@ -66,9 +119,23 @@ struct ContentView: View {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
 
-        messages.append(ChatMessage(text: text, isUser: true))
-        messages.append(ChatMessage(text: "これは固定メッセージです。", isUser: false))
         inputText = ""
+        errorMessage = nil
+        messages.append(ChatMessage(text: text, isUser: true))
+        isSending = true
+
+        let conversation = messages.map(\.llmMessage)
+        let client = llmClient
+
+        Task { @MainActor in
+            do {
+                let response = try await client.send(messages: conversation)
+                messages.append(ChatMessage(text: response, isUser: false))
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            isSending = false
+        }
     }
 }
 

@@ -182,12 +182,19 @@ HTTP通信には`URLSession`を使用する。初期版ではストリーミン�
 - ユーザーメッセージ表示
 - ボットメッセージ表示
 
-### Phase 2: LLM接続
+### Phase 2: LLM接続（基盤実装済み）
 
-- `LLMClient`を導入
-- OpenAI互換形式などのHTTPリクエストを実装
-- APIキーをKeychainから読む
-- LLMの回答を表示する
+- `LLMClient`プロトコルを導入
+- 固定応答用の`FixedResponseClient`を実装
+- OpenAI互換形式を想定した`OpenAICompatibleClient`を実装
+- URLSessionによるHTTPSリクエスト処理を実装
+- HTTPエラーと空レスポンスの処理を実装
+- 現在のアプリはエンドポイント未設定のため`FixedResponseClient`を使用
+- APIキーのKeychain保存は実際の接続時に追加する
+- `OpenAI-Organization`ヘッダー対応
+- 設定画面とKeychain保存を実装済み
+- エンドポイント未設定時は固定応答を使用する
+- 実際のエンドポイント接続は未実施
 
 ### Phase 3: 基本コンテキスト
 

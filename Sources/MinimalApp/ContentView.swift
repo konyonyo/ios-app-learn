@@ -15,6 +15,8 @@ struct ContentView: View {
     @State private var isShowingSettings = false
     @State private var isShowingProfile = false
     @State private var isShowingSessions = false
+    @State private var isShowingKnowledge = false
+    private let knowledgeStore = ChatGPTSQLiteStore()
 
     private var currentSession: ChatSession? {
         if let selectedSessionID {
@@ -77,6 +79,15 @@ struct ContentView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        isShowingKnowledge = true
+                    } label: {
+                        Image(systemName: "books.vertical")
+                    }
+                    .accessibilityLabel("ChatGPT history")
+                }
+
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
                         isShowingProfile = true
                     } label: {
                         Image(systemName: "person.text.rectangle")
@@ -98,6 +109,9 @@ struct ContentView: View {
             }
             .sheet(isPresented: $isShowingProfile) {
                 ProfileView(profile: $profile)
+            }
+            .sheet(isPresented: $isShowingKnowledge) {
+                KnowledgeView()
             }
             .sheet(isPresented: $isShowingSessions) {
                 SessionListView(
@@ -207,7 +221,15 @@ struct ContentView: View {
 
         let conversation = session.messages
             .sorted { $0.createdAt < $1.createdAt }
-        let context = ContextBuilder.build(profile: profile, messages: conversation)
+        let knowledge: [KnowledgeSearchResult]
+        do {
+            knowledge = try knowledgeStore.search(text, limit: 6)
+        } catch {
+            errorMessage = "過去の会話の検索に失敗しました: \(error.localizedDescription)"
+            isSending = false
+            return
+        }
+        let context = ContextBuilder.build(profile: profile, messages: conversation, knowledge: knowledge)
         let client = llmClient
 
         Task { @MainActor in

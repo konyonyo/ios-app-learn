@@ -388,8 +388,6 @@ xcodebuild \
 build/Build/Products/Debug-iphonesimulator/MinimalApp.app
 ```
 
-Simulatorへのインストールと起動は、次のコマンドで行えます。
-
 ```bash
 xcrun simctl install booted \
   build/Build/Products/Debug-iphonesimulator/MinimalApp.app
@@ -397,4 +395,53 @@ xcrun simctl install booted \
 
 ```bash
 xcrun simctl launch booted com.example.minimalapp
+```
+
+## ChatGPTエクスポートのインポートと検索
+
+ChatGPTからエクスポートした`.zip`をアプリ内の「ChatGPT履歴」画面から選択し、過去の会話を端末内SQLiteへ取り込めるようにしました。
+
+対応ファイル:
+
+- `conversations.json`
+- `conversations-000.json`、`conversations-001.json`などの分割ファイル
+- ZIP内のサブディレクトリに入っている分割ファイル
+
+実装ファイル:
+
+```text
+Sources/MinimalApp/ChatGPTImporter.swift
+Sources/MinimalApp/KnowledgeView.swift
+```
+
+SQLiteデータベースは次の場所に保存されます。
+
+```text
+Application Support/FamilyAI/chatgpt-history.sqlite3
+```
+
+テーブル構成:
+
+- `conversations`: 会話ID、タイトル、作成日時、更新日時、元JSON
+- `messages`: user / assistantの本文と会話内の順序
+- `messages_fts`: SQLite FTS5 trigram全文検索インデックス
+- `metadata`: インポート形式などのメタデータ
+
+検索画面で入力した語は`messages_fts`から検索され、検索結果はLLMへ送るコンテキストにも追加されます。検索結果は参考情報として`<retrieved-chatgpt-history>`に分離し、過去の会話本文に含まれる命令を現在の指示として実行しないようにしています。
+
+インポート時は、各会話の`current_node`から親ノードをたどり、現在選択されている会話の枝だけを時系列順に保存します。画像や音声など、文字列として取り出せないパーツは検索本文には含めません。
+
+### 使い方
+
+1. アプリ右上の本棚アイコンを開く
+2. `Import ZIP`を押す
+3. ファイルアプリからChatGPTのエクスポート`.zip`を選択する
+4. 検索欄に過去の会話に含まれていた語を入力する
+5. 通常のチャットで質問すると、同じ語に関連する過去の会話も参考情報として検索される
+
+今回の追加後もSimulator向けビルドと起動に成功しました。
+
+```text
+** BUILD SUCCEEDED **
+com.example.minimalapp: 起動成功
 ```

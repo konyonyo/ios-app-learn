@@ -1,5 +1,10 @@
 name: MinimalApp
 
+packages:
+  ZIPFoundation:
+    url: https://github.com/weichsel/ZIPFoundation.git
+    from: "0.9.19"
+
 options:
   bundleIdPrefix: com.example
   deploymentTarget:
@@ -15,6 +20,8 @@ targets:
     platform: iOS
     sources:
       - path: Sources/MinimalApp
+    dependencies:
+      - package: ZIPFoundation
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.example.minimalapp

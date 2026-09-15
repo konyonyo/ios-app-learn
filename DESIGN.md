@@ -176,10 +176,10 @@ SwiftData
 ├── ChatSession
 └── ChatMessage
 
-SQLite FTS5（Phase 4以降）
-├── knowledge_documents
-├── knowledge_chunks
-└── knowledge_chunks_fts
+SQLite FTS5
+├── conversations
+├── messages
+└── messages_fts
 ```
 
 想定する役割:
@@ -191,7 +191,7 @@ SQLite FTS5（Phase 4以降）
 - `knowledge_chunks`: 検索単位に分割した記憶データ
 - `knowledge_chunks_fts`: 記憶データの全文検索用インデックス
 
-ChatGPTエクスポートデータも、アプリ内会話履歴とは論理的に分離する。検索実装はSQLite FTS5から始める。検索品質が不足した場合に、将来意味検索を追加する。
+ChatGPTエクスポートデータも、アプリ内会話履歴とは論理的に分離する。現在はSQLite FTS5のtrigram検索を実装している。検索品質が不足した場合に、将来意味検索を追加する。
 
 ## 8. セッション
 

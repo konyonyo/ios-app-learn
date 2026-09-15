@@ -28,6 +28,7 @@ struct OpenAICompatibleClient: LLMClient {
     let model: String
     let apiKey: String?
     let organizationID: String?
+    let reasoningEffort: String?
 
     func send(messages: [LLMMessage]) async throws -> String {
         var request = URLRequest(url: endpoint)
@@ -42,7 +43,12 @@ struct OpenAICompatibleClient: LLMClient {
             request.setValue(organizationID, forHTTPHeaderField: "OpenAI-Organization")
         }
 
-        let body = RequestBody(model: model, messages: messages, stream: false)
+        let body = RequestBody(
+            model: model,
+            messages: messages,
+            stream: false,
+            reasoningEffort: reasoningEffort?.isEmpty == false ? reasoningEffort : nil
+        )
         request.httpBody = try JSONEncoder().encode(body)
 
         let (data, response) = try await URLSession.shared.data(for: request)
@@ -69,6 +75,14 @@ struct OpenAICompatibleClient: LLMClient {
         let model: String
         let messages: [LLMMessage]
         let stream: Bool
+        let reasoningEffort: String?
+
+        enum CodingKeys: String, CodingKey {
+            case model
+            case messages
+            case stream
+            case reasoningEffort = "reasoning_effort"
+        }
     }
 
     private struct ResponseBody: Decodable {

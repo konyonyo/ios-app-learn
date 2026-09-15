@@ -5,12 +5,14 @@ struct LLMConfiguration {
     var endpoint: String
     var model: String
     var organizationID: String
+    var reasoningEffort: String
     var apiKey: String
 
     static let `default` = LLMConfiguration(
         endpoint: "https://api.openai.com/v1/chat/completions",
         model: "gpt-4o-2024-11-20",
         organizationID: "",
+        reasoningEffort: "",
         apiKey: ""
     )
 
@@ -26,6 +28,7 @@ struct LLMConfiguration {
             endpoint: defaults.string(forKey: "llm.endpoint") ?? defaultConfiguration.endpoint,
             model: defaults.string(forKey: "llm.model") ?? defaultConfiguration.model,
             organizationID: defaults.string(forKey: "llm.organizationID") ?? "",
+            reasoningEffort: defaults.string(forKey: "llm.reasoningEffort") ?? "",
             apiKey: (try? KeychainStore.read(key: "llm.apiKey")) ?? ""
         )
     }
@@ -34,6 +37,7 @@ struct LLMConfiguration {
         UserDefaults.standard.set(endpoint, forKey: "llm.endpoint")
         UserDefaults.standard.set(model, forKey: "llm.model")
         UserDefaults.standard.set(organizationID, forKey: "llm.organizationID")
+        UserDefaults.standard.set(reasoningEffort, forKey: "llm.reasoningEffort")
         try KeychainStore.save(apiKey, key: "llm.apiKey")
     }
 }

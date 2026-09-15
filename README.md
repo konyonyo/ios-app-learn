@@ -263,9 +263,10 @@ Sources/MinimalApp/SettingsView.swift
 - Endpoint URL
 - Model
 - Organization ID（任意）
+- Reasoning effort（未指定 / low / medium / high）
 - API Key
 
-APIキーは`UserDefaults`ではなくiOS Keychainへ保存します。エンドポイントが未設定の場合、アプリは従来どおり固定応答を使用します。
+APIキーは`UserDefaults`ではなくiOS Keychainへ保存します。`reasoning_effort`は空欄ならリクエストに含めず、値を指定した場合だけOpenAI互換APIのJSON bodyへ送信します。利用できる値はモデルや接続先によって異なるため、対応していないモデルでは未指定に戻します。エンドポイントが未設定の場合、アプリは従来どおり固定応答を使用します。
 
 実際のLLMエンドポイントへの接続と動作確認は、接続先が決まった後に行います。
 

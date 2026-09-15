@@ -22,13 +22,20 @@ struct SettingsView: View {
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
 
+                    Picker("Reasoning effort", selection: $configuration.reasoningEffort) {
+                        Text("未指定").tag("")
+                        Text("Low").tag("low")
+                        Text("Medium").tag("medium")
+                        Text("High").tag("high")
+                    }
+
                     SecureField("API Key", text: $configuration.apiKey)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                 }
 
                 Section {
-                    Text("未設定の場合は固定応答を使用します。APIキーはKeychainに保存します。")
+                    Text("Reasoning effortはAPIリクエストのreasoning_effortとして送信します。未指定ならリクエストに含めません。APIキーはKeychainに保存します。")
                         .font(.footnote)
                         .foregroundStyle(.secondary)
                 }

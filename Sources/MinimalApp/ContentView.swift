@@ -39,7 +39,8 @@ struct ContentView: View {
             endpoint: endpoint,
             model: configuration.model,
             apiKey: configuration.apiKey,
-            organizationID: configuration.organizationID
+            organizationID: configuration.organizationID,
+            reasoningEffort: configuration.reasoningEffort
         )
     }
 

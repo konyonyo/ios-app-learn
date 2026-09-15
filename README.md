@@ -460,3 +460,139 @@ Application Support/FamilyAI/chatgpt-history.sqlite3
 ** BUILD SUCCEEDED **
 com.example.minimalapp: 起動成功
 ```
+
+## 実デバイスでの実行
+
+Simulatorではなく、実際のiPadやiPhoneでアプリを実行する場合は、コード署名とプロビジョニングの設定が必要です。最初はXcodeから実行する方法を使用します。
+
+### 前提
+
+- Macと実デバイス
+- Xcodeに登録したApple Account
+- USBケーブル、または設定済みのワイヤレス接続
+- iPad / iPhoneのDeveloper Mode
+
+### 1. デバイスをMacへ接続
+
+USBケーブルでiPadまたはiPhoneをMacへ接続します。
+
+デバイスに「このコンピュータを信頼しますか？」と表示された場合は、「信頼」を選択します。
+
+### 2. Developer Modeを有効化
+
+デバイスで次の設定を開きます。
+
+```text
+設定
+  ↓
+プライバシーとセキュリティ
+  ↓
+Developer Mode
+```
+
+Developer Modeを有効にし、再起動を求められた場合はデバイスを再起動します。
+
+### 3. XcodeへApple Accountを登録
+
+Xcodeで次の画面を開きます。
+
+```text
+Xcode
+  ↓
+Settings...
+  ↓
+Accounts
+```
+
+Apple Accountを追加します。
+
+無料のApple Accountでも実機での動作確認は可能ですが、無料署名には有効期間などの制限があります。継続的な配布やTestFlight利用にはApple Developer Programへの加入が必要です。
+
+### 4. Xcodeでプロジェクトを開く
+
+プロジェクトのルートディレクトリで実行します。
+
+```bash
+open MinimalApp.xcodeproj
+```
+
+Xcode左側のプロジェクトナビゲーターで、青いプロジェクトアイコンの`MinimalApp`を選択します。
+
+### 5. Signingを設定
+
+次の画面を開きます。
+
+```text
+TARGETS
+  ↓
+MinimalApp
+  ↓
+Signing & Capabilities
+```
+
+次を設定します。
+
+- `Automatically manage signing`を有効にする
+- `Team`に自分のApple Accountを選択する
+
+Bundle Identifierは、Apple Account内で一意になる値に変更します。例えば次のような値です。
+
+```text
+com.xxxxx.familyai
+```
+
+変更場所:
+
+```text
+General
+  ↓
+Identity
+  ↓
+Bundle Identifier
+```
+
+現在の`project.yml`ではBundle Identifierが`com.example.minimalapp`になっています。XcodeGenでプロジェクトを再生成する場合は、`project.yml`側の値も合わせて変更します。
+
+### 6. 実デバイスを実行先に選択
+
+Xcode上部の実行先選択で、Simulatorではなく接続したiPadまたはiPhoneを選択します。
+
+```text
+MinimalApp
+  [接続したデバイスの名前]
+```
+
+その状態で再生ボタンを押すと、ビルド、署名、インストール、起動が行われます。
+
+初回起動時に「信頼されていないデベロッパ」と表示された場合は、デバイスで次を開き、自分のApple Accountを信頼します。
+
+```text
+設定
+  ↓
+一般
+  ↓
+VPNとデバイス管理
+```
+
+### 7. CLIから実機向けにビルドする場合
+
+Xcodeで署名設定を完了した後は、`xcodebuild`でも実機向けにビルドできます。
+
+まず、接続されたデバイスのUDIDを確認します。
+
+```bash
+xcrun xctrace list devices
+```
+
+その後、UDIDを指定してビルドします。
+
+```bash
+xcodebuild \
+  -project MinimalApp.xcodeproj \
+  -scheme MinimalApp \
+  -destination 'platform=iOS,id=実機のUDID' \
+  -derivedDataPath build \
+  build
+```
+
+最初の実機実行では、証明書、Provisioning Profile、Developer Modeなどの設定エラーを確認しやすいため、XcodeのGUIから実行する方法を推奨します。

@@ -8,6 +8,7 @@ struct ContentView: View {
 
     @State private var selectedSessionID: UUID?
     @State private var inputText = ""
+    @State private var inputFieldID = UUID()
     @State private var isSending = false
     @State private var errorMessage: String?
     @State private var configuration = LLMConfiguration.load()
@@ -125,6 +126,14 @@ struct ContentView: View {
             .task {
                 ensureSession()
             }
+            .onChange(of: selectedSessionID) { _, _ in
+                clearInputField()
+            }
+            .onChange(of: isSending) { wasSending, nowSending in
+                if wasSending && !nowSending {
+                    clearInputField()
+                }
+            }
         }
     }
 
@@ -157,6 +166,7 @@ struct ContentView: View {
     private var inputBar: some View {
         HStack(alignment: .bottom, spacing: 8) {
             TextField("メッセージを入力", text: $inputText, axis: .vertical)
+                .id(inputFieldID)
                 .textFieldStyle(.roundedBorder)
                 .lineLimit(1...4)
                 .disabled(isSending)
@@ -239,7 +249,7 @@ struct ContentView: View {
         let text = inputText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
 
-        inputText = ""
+        clearInputField()
         errorMessage = nil
 
         let userMessage = ChatMessage(content: text, role: "user", session: session)
@@ -284,6 +294,11 @@ struct ContentView: View {
             }
             isSending = false
         }
+    }
+
+    private func clearInputField() {
+        inputText = ""
+        inputFieldID = UUID()
     }
 
     private func deleteSession(_ session: ChatSession) {

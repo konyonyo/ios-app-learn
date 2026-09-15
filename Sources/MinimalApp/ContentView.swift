@@ -129,13 +129,28 @@ struct ContentView: View {
     }
 
     private func messageList(for session: ChatSession) -> some View {
-        ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(currentMessages) { message in
-                    messageBubble(message)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    ForEach(currentMessages) { message in
+                        messageBubble(message)
+                            .id(message.id)
+                    }
+                }
+                .padding()
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onChange(of: currentMessages.last?.id) { _, lastID in
+                guard let lastID else { return }
+                withAnimation {
+                    proxy.scrollTo(lastID, anchor: .bottom)
                 }
             }
-            .padding()
+            .onAppear {
+                if let lastID = currentMessages.last?.id {
+                    proxy.scrollTo(lastID, anchor: .bottom)
+                }
+            }
         }
     }
 

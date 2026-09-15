@@ -34,6 +34,7 @@ struct SessionListView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
             .navigationTitle("Sessions")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {

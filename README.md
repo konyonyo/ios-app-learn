@@ -270,6 +270,18 @@ APIキーは`UserDefaults`ではなくiOS Keychainへ保存します。`reasonin
 
 実際のLLMエンドポイントへの接続と動作確認は、接続先が決まった後に行います。
 
+## ストリーミング応答と推論内容
+
+OpenAI互換のChat Completions APIへ`stream: true`で接続し、Server-Sent Events（SSE）を1チャンクずつ処理するようにしました。
+
+- 回答本文を受信したチャンクから画面へ追加表示
+- `reasoning_content`または`reasoning`として送られた推論内容を別に収集
+- 推論内容は`推論内容`のDisclosureGroup内に折りたたんで表示
+- 推論内容もSwiftDataへ保存し、後から開いて確認可能
+- 既存の会話データを壊さないよう、推論内容はOptionalとして追加
+
+現在はOpenAI互換APIで一般的な`reasoning_content`形式と`reasoning`形式に対応しています。接続先によってストリーミング時のフィールド名が異なる場合は、そのAPI仕様に合わせて追加対応します。
+
 ## セッションと会話履歴
 
 会話履歴を端末内へ保存するため、SwiftDataを導入しました。

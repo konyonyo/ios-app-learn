@@ -24,6 +24,7 @@ final class ChatMessage {
     var id: UUID
     var role: String
     var content: String
+    var reasoningContent: String?
     var createdAt: Date
     var session: ChatSession?
 
@@ -38,10 +39,11 @@ final class ChatMessage {
         )
     }
 
-    init(content: String, role: String, session: ChatSession? = nil) {
+    init(content: String, role: String, reasoningContent: String = "", session: ChatSession? = nil) {
         self.id = UUID()
         self.role = role
         self.content = content
+        self.reasoningContent = reasoningContent.isEmpty ? nil : reasoningContent
         self.createdAt = Date()
         self.session = session
     }

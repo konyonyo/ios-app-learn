@@ -168,12 +168,31 @@ struct ContentView: View {
                 Spacer(minLength: 48)
             }
 
-            Text(message.content)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .foregroundStyle(message.isUser ? .white : .primary)
-                .background(message.isUser ? Color.blue : Color(.systemGray5))
-                .clipShape(RoundedRectangle(cornerRadius: 16))
+            VStack(alignment: message.isUser ? .trailing : .leading, spacing: 8) {
+                if let reasoning = message.reasoningContent,
+                   !reasoning.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    DisclosureGroup("推論内容") {
+                        Text(reasoning)
+                            .font(.footnote.monospaced())
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .textSelection(.enabled)
+                    }
+                    .font(.footnote)
+                    .tint(.secondary)
+                }
+
+                if !message.content.isEmpty {
+                    Text(message.content)
+                        .foregroundStyle(message.isUser ? .white : .primary)
+                } else if !message.isUser {
+                    ProgressView()
+                }
+            }
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(message.isUser ? Color.blue : Color(.systemGray5))
+            .clipShape(RoundedRectangle(cornerRadius: 16))
 
             if !message.isUser {
                 Spacer(minLength: 48)
@@ -194,13 +213,6 @@ struct ContentView: View {
     private func createSession() {
         let session = ChatSession()
         modelContext.insert(session)
-        session.messages.append(
-            ChatMessage(
-                content: "こんにちは。メッセージを入力してください。",
-                role: "assistant",
-                session: session
-            )
-        )
         selectedSessionID = session.id
         saveContext()
     }
@@ -234,14 +246,21 @@ struct ContentView: View {
         let client = llmClient
 
         Task { @MainActor in
+            let assistantMessage = ChatMessage(content: "", role: "assistant", session: session)
+            session.messages.append(assistantMessage)
             do {
-                let response = try await client.send(messages: context)
-                session.messages.append(
-                    ChatMessage(content: response, role: "assistant", session: session)
-                )
+                let response = try await client.send(messages: context) { update in
+                    assistantMessage.content += update.content
+                    if !update.reasoning.isEmpty {
+                        assistantMessage.reasoningContent = (assistantMessage.reasoningContent ?? "") + update.reasoning
+                    }
+                }
+                assistantMessage.content = response.content
+                assistantMessage.reasoningContent = response.reasoning
                 session.updatedAt = Date()
                 saveContext()
             } catch {
+                session.messages.removeAll { $0.id == assistantMessage.id }
                 errorMessage = error.localizedDescription
             }
             isSending = false

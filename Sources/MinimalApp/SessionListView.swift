@@ -5,7 +5,9 @@ struct SessionListView: View {
     let sessions: [ChatSession]
     @Binding var selectedSessionID: UUID?
     let onCreate: () -> Void
+    let onDelete: (ChatSession) -> Void
     @Environment(\.dismiss) private var dismiss
+    @State private var sessionToDelete: ChatSession?
 
     var body: some View {
         NavigationStack {
@@ -21,6 +23,13 @@ struct SessionListView: View {
                             Text(session.updatedAt, style: .date)
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
+                        }
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                        Button(role: .destructive) {
+                            sessionToDelete = session
+                        } label: {
+                            Label("Delete", systemImage: "trash")
                         }
                     }
                 }
@@ -42,6 +51,28 @@ struct SessionListView: View {
                     .accessibilityLabel("New session")
                 }
             }
+            .alert("セッションを削除しますか？", isPresented: deleteAlertIsPresented) {
+                Button("キャンセル", role: .cancel) {
+                    sessionToDelete = nil
+                }
+                Button("削除", role: .destructive) {
+                    if let sessionToDelete {
+                        onDelete(sessionToDelete)
+                    }
+                    self.sessionToDelete = nil
+                }
+            } message: {
+                Text(sessionToDelete?.title ?? "")
+            }
         }
+    }
+
+    private var deleteAlertIsPresented: Binding<Bool> {
+        Binding(
+            get: { sessionToDelete != nil },
+            set: { isPresented in
+                if !isPresented { sessionToDelete = nil }
+            }
+        )
     }
 }

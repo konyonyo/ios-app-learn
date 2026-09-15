@@ -118,7 +118,8 @@ struct ContentView: View {
                 SessionListView(
                     sessions: sessions,
                     selectedSessionID: $selectedSessionID,
-                    onCreate: createSession
+                    onCreate: createSession,
+                    onDelete: deleteSession
                 )
             }
             .task {
@@ -228,6 +229,9 @@ struct ContentView: View {
 
         let userMessage = ChatMessage(content: text, role: "user", session: session)
         session.messages.append(userMessage)
+        if session.title == "新しい会話" {
+            session.title = makeSessionTitle(from: text)
+        }
         session.updatedAt = Date()
         saveContext()
         isSending = true
@@ -265,6 +269,23 @@ struct ContentView: View {
             }
             isSending = false
         }
+    }
+
+    private func deleteSession(_ session: ChatSession) {
+        let wasSelected = selectedSessionID == session.id
+        modelContext.delete(session)
+        if wasSelected {
+            selectedSessionID = nil
+        }
+        saveContext()
+    }
+
+    private func makeSessionTitle(from text: String) -> String {
+        let normalized = text
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
+        if normalized.count <= 32 { return normalized }
+        return String(normalized.prefix(32)) + "…"
     }
 
     private func saveContext() {
